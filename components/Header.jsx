@@ -1,12 +1,9 @@
-import { useRouter } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useData } from '../context/DataContext';
 
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-export default function Header() {
+export default function Header({ onMenu }) {
   const { expenses, incomes } = useData();
-  const router = useRouter();
 
   const totalExpense = expenses.reduce((s, e) => s + e.amount, 0);
   const totalIncome = incomes.reduce((s, i) => s + i.amount, 0);
@@ -15,25 +12,14 @@ export default function Header() {
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
-        {/* Left Side Logo + Title */}
-        <TouchableOpacity style={styles.left} onPress={() => router.push('/')}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>💰</Text>
-          </View>
-          <Text style={styles.title}>আমার হিসাব</Text>
+        {/* Hamburger */}
+        <TouchableOpacity onPress={onMenu}>
+          <MaterialCommunityIcons name='menu' size={28} color='white' />
         </TouchableOpacity>
 
-        {/* Right Side Balance */}
-        <View style={styles.balanceContainer}>
-          <Text style={styles.balanceLabel}>ব্যালেন্স</Text>
-          <Text style={styles.balanceValue}>
-            <MaterialCommunityIcons
-              name='currency-bdt'
-              size={20}
-              color='white'
-            />{' '}
-            {balance}
-          </Text>
+        <View style={styles.balance}>
+          <MaterialCommunityIcons name='currency-bdt' size={18} color='white' />
+          <Text style={styles.balanceText}>{balance}</Text>
         </View>
       </View>
     </View>
@@ -42,50 +28,34 @@ export default function Header() {
 
 const styles = StyleSheet.create({
   wrapper: {
-    width: '100%',
-    alignItems: 'center',
     marginTop: 50,
-    // backgroundColor: '#ffffff',
+    alignItems: 'center',
   },
   container: {
     width: '90%',
+    backgroundColor: '#008080cc',
+    padding: 16,
+    borderRadius: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,128,128,0.7)',
   },
-  left: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#ffffff33',
-    justifyContent: 'center',
-    alignItems: 'center',
+  title: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  logoText: { fontSize: 20, color: 'white' },
-  title: { fontSize: 18, fontWeight: 'bold', color: 'white' },
-  balanceContainer: {
+  balance: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
     backgroundColor: '#ffffff33',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  balanceLabel: {
-    fontSize: 16,
-    fontWeight: '600',
+  balanceText: {
     color: 'white',
-  },
-  balanceValue: {
-    fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });

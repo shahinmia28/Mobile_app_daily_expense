@@ -1,175 +1,312 @@
 import { Feather } from '@expo/vector-icons';
+import * as d3 from 'd3-shape';
 import dayjs from 'dayjs';
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useRef, useState } from 'react';
 import {
+  Animated,
   Dimensions,
+  PanResponder,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { PieChart } from 'react-native-chart-kit';
+import Svg, { G, Path, Text as SvgText } from 'react-native-svg';
 import { useData } from '../context/DataContext';
 
 const screenWidth = Dimensions.get('window').width;
+const CHART_SIZE = screenWidth - 100;
 
 export default function Report() {
   const { expenses, incomes } = useData();
-  const [viewType, setViewType] = useState('monthly'); // monthly / weekly
-  const [selectedDate, setSelectedDate] = useState(
-    dayjs().format('YYYY-MM-DD')
-  );
+  const router = useRouter();
+  const [selectedMonth, setSelectedMonth] = useState(dayjs());
 
-  // Start & End date for filter
-  const getRange = () => {
-    const date = dayjs(selectedDate);
-    if (viewType === 'monthly') {
-      return {
-        start: date.startOf('month').toISOString(),
-        end: date.endOf('month').toISOString(),
-      };
-    } else {
-      return {
-        start: date.startOf('week').toISOString(),
-        end: date.endOf('week').toISOString(),
-      };
-    }
+  const startOfMonth = selectedMonth.startOf('month').toDate();
+  const endOfMonth = selectedMonth.endOf('month').toDate();
+
+  const filterByMonth = (data) =>
+    data.filter((item) => {
+      const date = new Date(item.date);
+      return date >= startOfMonth && date <= endOfMonth;
+    });
+
+  const generateChartData = (data, type) => {
+    const map = {};
+    data.forEach((item) => {
+      if (map[item.reason]) map[item.reason] += Number(item.amount);
+      else map[item.reason] = Number(item.amount);
+    });
+
+    const colors =
+      type === 'income'
+        ? [
+            '#bd43ff',
+            '#008c4b',
+            '#00ff5e',
+            '#8baaff',
+            '#001f76',
+            '#0044ff',
+            '#9000ff',
+            '#4b0085',
+          ]
+        : [
+            '#facc15',
+            '#00ff5e',
+            '#ef4444',
+            '#a855f7',
+            '#152cfa',
+            '#ff00e1',
+            '#9fdd00',
+            '#00ffff',
+          ];
+
+    return Object.keys(map).map((key, idx) => ({
+      name: key,
+      amount: map[key],
+      color: colors[idx % colors.length],
+    }));
   };
 
-  const { start, end } = getRange();
-
-  const filteredData = [...incomes, ...expenses].filter((item) => {
-    const itemDate = new Date(item.date);
-    return itemDate >= new Date(start) && itemDate <= new Date(end);
-  });
-
-  // pie chart data
-  const reasonMap = {};
-  filteredData.forEach((item) => {
-    if (reasonMap[item.reason]) {
-      reasonMap[item.reason] += Number(item.amount);
-    } else {
-      reasonMap[item.reason] = Number(item.amount);
-    }
-  });
-
-  const colors = [
-    '#FF6384',
-    '#36A2EB',
-    '#FFCE56',
-    '#4BC0C0',
-    '#9966FF',
-    '#FF9F40',
-    '#C9CBCF',
-  ];
-
-  const chartData = Object.keys(reasonMap).map((key, index) => ({
-    name: key,
-    amount: reasonMap[key],
-    color: colors[index % colors.length],
-    legendFontColor: '#333',
-    legendFontSize: 14,
-  }));
+  const incomeChartData = generateChartData(filterByMonth(incomes), 'income');
+  const expenseChartData = generateChartData(
+    filterByMonth(expenses),
+    'expense'
+  );
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView contentContainerStyle={styles.container}>
       {/* Top Bar */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
-        }}
-      >
-        {/* Back Button */}
-        <TouchableOpacity
-          onPress={() => {
-            router.push('/');
-          }}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            backgroundColor: '#374151',
-            paddingVertical: 8,
-            paddingHorizontal: 12,
-            borderRadius: 24,
-          }}
-        >
-          <Feather name='arrow-left-circle' size={20} color='white' />
-          <Text style={{ color: 'white', marginLeft: 6 }}>Back</Text>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => router.push('/')}>
+          <Feather name='arrow-left-circle' size={24} />
         </TouchableOpacity>
 
-        {/* Toggle Buttons */}
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={styles.monthSelector}>
           <TouchableOpacity
-            onPress={() => setViewType('monthly')}
-            style={{
-              backgroundColor: viewType === 'monthly' ? '#3B82F6' : '#E5E7EB',
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 24,
-            }}
+            onPress={() => setSelectedMonth(selectedMonth.subtract(1, 'month'))}
           >
-            <Text
-              style={{
-                color: viewType === 'monthly' ? 'white' : '#374151',
-                fontWeight: 'bold',
-              }}
-            >
-              Monthly
-            </Text>
+            <Feather name='chevron-left' size={18} />
           </TouchableOpacity>
-
+          <Text style={styles.monthText}>
+            {selectedMonth.format('MMMM YYYY')}
+          </Text>
           <TouchableOpacity
-            onPress={() => setViewType('weekly')}
-            style={{
-              backgroundColor: viewType === 'weekly' ? '#3B82F6' : '#E5E7EB',
-              paddingVertical: 6,
-              paddingHorizontal: 12,
-              borderRadius: 24,
-            }}
+            onPress={() => setSelectedMonth(selectedMonth.add(1, 'month'))}
           >
-            <Text
-              style={{
-                color: viewType === 'weekly' ? 'white' : '#374151',
-                fontWeight: 'bold',
-              }}
-            >
-              Weekly
-            </Text>
+            <Feather name='chevron-right' size={18} />
           </TouchableOpacity>
         </View>
+
+        <View style={{ width: 24 }} />
       </View>
 
-      {/* Pie Chart */}
-      <View
-        style={{
-          backgroundColor: 'white',
-          borderRadius: 16,
-          padding: 16,
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: 2 },
-          elevation: 4,
-        }}
-      >
-        <PieChart
-          data={chartData}
-          width={screenWidth - 32}
-          height={220}
-          chartConfig={{
-            color: () => `rgba(0, 0, 0, 1)`,
-            labelColor: () => `rgba(0,0,0,0.8)`,
-          }}
-          accessor='amount'
-          backgroundColor='transparent'
-          paddingLeft='15'
-          absolute
-        />
+      <View style={styles.card}>
+        <DonutChart data={expenseChartData} title='ব্যয়' />
+      </View>
+
+      <View style={styles.card}>
+        <DonutChart data={incomeChartData} title='আয়' />
       </View>
     </ScrollView>
   );
 }
+
+/* ================= DONUT ================= */
+
+function DonutChart({ data, title }) {
+  const size = CHART_SIZE + 40; // chart-er মোট সাইজ
+  const radius = CHART_SIZE / 2; // outer radius
+  const innerRadius = radius - 110; // donut hole
+
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const rotateValue = useRef(new Animated.Value(0)).current;
+
+  // ================= PAN RESPONDER =================
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, g) => rotateValue.setValue(g.dx),
+      onPanResponderRelease: (_, g) => {
+        Animated.decay(rotateValue, {
+          velocity: g.vx,
+          deceleration: 0.995,
+          useNativeDriver: true,
+        }).start();
+      },
+    })
+  ).current;
+
+  const rotate = rotateValue.interpolate({
+    inputRange: [-300, 300],
+    outputRange: ['-180deg', '180deg'],
+  });
+
+  // ================= PIE DATA =================
+  const pieData = d3.pie().value((d) => d.amount)(data);
+
+  const arc = d3.arc().innerRadius(innerRadius).outerRadius(radius);
+  const arcActive = d3
+    .arc()
+    .innerRadius(innerRadius)
+    .outerRadius(radius + 16); // tap করলে slice একটু বড় হয়
+
+  const total = data.reduce((s, i) => s + i.amount, 0);
+
+  return (
+    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
+      {/* ================= CHART ================= */}
+      <View>
+        <Animated.View
+          {...panResponder.panHandlers}
+          style={{ transform: [{ rotate }] }}
+        >
+          <Svg width={size} height={size}>
+            <G x={size / 2} y={size / 2}>
+              {pieData.map((slice, i) => {
+                const path = activeIndex === i ? arcActive(slice) : arc(slice);
+
+                const [x, y] = arc.centroid(slice);
+
+                // ================= TEXT ALIGN =================
+                // Slice-er dike always text thakbe
+                const offset = 5; // slice theke distance
+                const textX = x >= 0 ? x + offset : x - offset;
+                const textAnchor = x >= 0 ? 'start' : 'end';
+
+                return (
+                  <G key={i}>
+                    <Path
+                      d={path}
+                      fill={slice.data.color}
+                      stroke='#fff'
+                      strokeWidth={0.5} // border
+                      onPress={() => setActiveIndex(i)}
+                    />
+                    <SvgText
+                      x={textX}
+                      y={y}
+                      fill='#fff'
+                      fontSize='11'
+                      fontWeight='400'
+                      textAnchor={textAnchor}
+                    >
+                      {slice.data.amount}
+                    </SvgText>
+                  </G>
+                );
+              })}
+            </G>
+          </Svg>
+        </Animated.View>
+
+        {/* ================= CENTER HOLE ================= */}
+        <View style={[styles.centerHole, { top: size / 2 - 35 }]}>
+          <Text style={styles.centerText}>{title}</Text>
+        </View>
+      </View>
+
+      {/* ================= LEGEND ================= */}
+      <View style={styles.legendRight}>
+        {data.map((item, i) => {
+          const percent = Math.round((item.amount / total) * 100);
+          return (
+            <View key={i} style={styles.legendRow} selectable>
+              <View style={[styles.dot, { backgroundColor: item.color }]} />
+              <Text style={styles.legendText} selectable>
+                {item.name} — {item.amount}{' '}
+                <Text style={{ color: item.color }}>({percent}%) </Text>
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/* ================= STYLES ================= */
+
+const styles = StyleSheet.create({
+  container: { padding: 16, backgroundColor: '#ffffff' },
+
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+
+  monthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e5e7eb',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+
+  monthText: {
+    marginHorizontal: 8,
+    fontWeight: 'bold',
+  },
+
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginVertical: 8,
+  },
+
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 4,
+  },
+
+  centerHole: {
+    position: 'absolute',
+    alignSelf: 'center',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#f4f4f4',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  centerText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+
+  legendRight: {
+    width: '100%',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginTop: 10,
+  },
+
+  legendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  dot: {
+    width: 20,
+    height: 20,
+    borderRadius: '100%',
+    marginRight: 6,
+  },
+
+  legendText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#333',
+  },
+});
