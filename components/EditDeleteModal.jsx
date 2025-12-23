@@ -16,22 +16,8 @@ import Toast from 'react-native-toast-message';
 import { useData } from '../context/DataContext';
 import BDDateTime from '../utils/BDDateTime';
 
-const incomeCategories = [
-  'বেতন',
-  'ব্যবসার লাভ',
-  'টিউশন ফি',
-  'উপার্জন',
-  'অন্যান্য আয়',
-];
-const expenseCategories = [
-  'খাবার',
-  'বাজার সদাই',
-  'যাতায়াত',
-  'ঔষধ',
-  'বিল পরিশোধ',
-  'বিনোদন',
-  'অন্যান্য খরচ',
-];
+const incomeCategories = ['বেতন', 'ব্যবসার লাভ', 'টিউশন ফি', 'অন্যান্য '];
+const expenseCategories = ['বাজার', 'বিল', 'ঔষধ', 'বিনোদন', 'অন্যান্য'];
 
 export default function EditDeleteModal({ visible, item, onClose }) {
   const {

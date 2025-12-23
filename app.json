@@ -1,19 +1,21 @@
 {
   "expo": {
-    "name": "DailyExpenseApp",
-    "slug": "DailyExpenseApp",
-    "version": "1.0.0",
+    "name": "DailyWallet",
+    "slug": "DailyWallet",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "dailyexpenseapp",
+    "scheme": "dailywallet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.shahin.dailywallet",
+      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#ffffff",
+        "backgroundColor": "#ffffff00",
         "foregroundImage": "./assets/images/icon.png"
       },
       "edgeToEdgeEnabled": true,
@@ -21,7 +23,7 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
@@ -42,6 +44,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f469ec98-3407-4668-80f4-2ca5d83d8208"
+      }
     }
   }
 }

@@ -1,7 +1,7 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useData } from '../context/DataContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useData } from '../context/DataContext';
 
 export default function Summary() {
   const { expenses, incomes } = useData();
@@ -63,7 +63,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#6366f1',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
   },
   reportIcon: {
     width: 64,
@@ -75,11 +74,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   reportText: { color: 'white', fontWeight: 'bold', marginTop: 4 },
-  summaryBoxes: { flex: 2, gap: 8 },
+  summaryBoxes: { flex: 2, gap: 4 },
   box: {
     padding: 12,
     borderRadius: 16,
-    marginVertical: 4,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',

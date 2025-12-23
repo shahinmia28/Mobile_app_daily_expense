@@ -46,15 +46,15 @@ export default function IncomeForm() {
 
   const icons = [
     {
+      label: 'ব্যবসার লাভ',
+      icon: <FontAwesome name='credit-card' size={28} color='green' />,
+    },
+    {
       label: 'বেতন',
       icon: <FontAwesome name='money' size={28} color='green' />,
     },
     {
-      label: 'জমা রাখা',
-      icon: <FontAwesome name='credit-card' size={28} color='green' />,
-    },
-    {
-      label: 'সঞ্চয়',
+      label: 'টিউশন ফি',
       icon: <FontAwesome name='plus' size={28} color='green' />,
     },
   ];
@@ -192,10 +192,11 @@ const styles = StyleSheet.create({
   label: { fontWeight: 'bold', marginBottom: 4 },
   iconRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
   iconButton: {
+    width: '30%',
     alignItems: 'center',
     padding: 12,
     borderWidth: 1,

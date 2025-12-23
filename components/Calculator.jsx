@@ -114,7 +114,36 @@ export default function Calculator({
               {calculateResult(input)}
             </Text>
           </View>
+          {/* Bottom Row: AC | C | = | Cancel */}
+          <View style={styles.bottomRow}>
+            <TouchableOpacity
+              style={[styles.bottomBtn, { backgroundColor: '#343434' }]}
+              onPress={onClose}
+            >
+              <Text style={[styles.bottomBtnText, { color: 'white' }]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
+              onPress={handleAllClear}
+            >
+              <Text style={styles.bottomBtnText}>AC</Text>
+            </TouchableOpacity>
 
+            <TouchableOpacity
+              style={[styles.bottomBtn, { backgroundColor: '#222' }]}
+              onPress={handleEqual}
+            >
+              <Text style={[styles.bottomBtnText, { color: 'white' }]}>=</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
+              onPress={handleSingleClear}
+            >
+              <Text style={styles.bottomBtnText}>C</Text>
+            </TouchableOpacity>
+          </View>
           {/* Calculator Buttons */}
           {buttons.map((row, rIdx) => (
             <View key={rIdx} style={styles.row}>
@@ -129,36 +158,6 @@ export default function Calculator({
               ))}
             </View>
           ))}
-
-          {/* Bottom Row: AC | C | = | Cancel */}
-          <View style={styles.bottomRow}>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
-              onPress={handleAllClear}
-            >
-              <Text style={styles.bottomBtnText}>AC</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
-              onPress={handleSingleClear}
-            >
-              <Text style={styles.bottomBtnText}>C</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#222' }]}
-              onPress={handleEqual}
-            >
-              <Text style={[styles.bottomBtnText, { color: 'white' }]}>=</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#222' }]}
-              onPress={onClose}
-            >
-              <Text style={[styles.bottomBtnText, { color: 'white' }]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </Modal>

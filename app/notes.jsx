@@ -90,7 +90,7 @@ export default function NotesPage() {
 
 /* ❌ DESIGN NOT CHANGED */
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: 16, marginTop: 10 },
   header: {
     backgroundColor: '#374151',
     padding: 14,

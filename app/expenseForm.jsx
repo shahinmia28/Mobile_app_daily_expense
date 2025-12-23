@@ -54,7 +54,7 @@ export default function ExpenseForm() {
       icon: <FontAwesome name='credit-card' size={28} color='red' />,
     },
     {
-      label: 'অন্যান্য',
+      label: 'ঔষধ',
       icon: <FontAwesome name='plus' size={28} color='red' />,
     },
   ];
@@ -193,10 +193,11 @@ const styles = StyleSheet.create({
   label: { fontWeight: 'bold', marginBottom: 4 },
   iconRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
   iconButton: {
+    width: '30%',
     alignItems: 'center',
     padding: 12,
     borderWidth: 1,
