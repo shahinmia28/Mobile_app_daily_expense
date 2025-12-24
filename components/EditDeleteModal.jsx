@@ -116,7 +116,7 @@ export default function EditDeleteModal({ visible, item, onClose }) {
   const headerText = item.type === 'income' ? 'Income (আয়)' : 'Expense (খরচ)';
 
   return (
-    <Modal visible={visible} transparent animationType='fade'>
+    <Modal visible={visible} transparent={true} animationType='fade'>
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <Text style={[styles.header, headerColor]}>Edit {headerText}</Text>

@@ -48,7 +48,7 @@ export default function ConfirmDeleteModal({ visible, onClose, onConfirm }) {
   if (visible) animateIn();
 
   return (
-    <Modal visible={visible} transparent animationType='fade'>
+    <Modal visible={visible} transparent={true} animationType='fade'>
       <View style={styles.overlay}>
         <Animated.View
           style={[styles.container, { transform: [{ scale }], opacity }]}

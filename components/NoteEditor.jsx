@@ -98,7 +98,12 @@ export default function NoteEditor({
   };
 
   return (
-    <Modal visible={visible} animationType='slide' onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType='slide'
+      transparent={false}
+      onRequestClose={onClose}
+    >
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>

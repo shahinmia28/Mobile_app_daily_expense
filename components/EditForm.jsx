@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  View,
+  Modal,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  Modal,
-  StyleSheet,
+  View,
 } from 'react-native';
 import { useData } from '../context/DataContext';
 
@@ -29,7 +29,7 @@ export default function EditForm({ visible, item, onClose }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType='fade'>
+    <Modal visible={visible} transparent={true} animationType='fade'>
       <View style={styles.overlay}>
         <View style={styles.container}>
           <Text style={styles.header}>Edit Entry</Text>

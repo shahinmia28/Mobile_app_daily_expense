@@ -93,7 +93,7 @@ export default function Calculator({
   ];
 
   return (
-    <Modal visible={visible} animationType='slide' transparent>
+    <Modal visible={visible} animationType='slide' transparent={true}>
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
           {/* Input Field with cursor, keyboard-free */}
@@ -110,7 +110,7 @@ export default function Calculator({
 
           {/* Live Result Field */}
           <View style={styles.resultDisplay}>
-            <Text style={styles.resultText} selectable>
+            <Text style={styles.resultText} selectable={true}>
               {calculateResult(input)}
             </Text>
           </View>

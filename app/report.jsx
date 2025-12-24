@@ -190,7 +190,7 @@ function DonutChart({ data, title }) {
                       x={textX}
                       y={y}
                       fill='#fff'
-                      fontSize='11'
+                      fontSize={11}
                       fontWeight='400'
                       textAnchor={textAnchor}
                     >
@@ -214,9 +214,9 @@ function DonutChart({ data, title }) {
         {data.map((item, i) => {
           const percent = Math.round((item.amount / total) * 100);
           return (
-            <View key={i} style={styles.legendRow} selectable>
+            <View key={i} style={styles.legendRow}>
               <View style={[styles.dot, { backgroundColor: item.color }]} />
-              <Text style={styles.legendText} selectable>
+              <Text style={styles.legendText} selectable={true}>
                 {item.name} — {item.amount}{' '}
                 <Text style={{ color: item.color }}>({percent}%) </Text>
               </Text>
@@ -300,7 +300,7 @@ const styles = StyleSheet.create({
   dot: {
     width: 20,
     height: 20,
-    borderRadius: '100%',
+    borderRadius: 100,
     marginRight: 6,
   },
 
