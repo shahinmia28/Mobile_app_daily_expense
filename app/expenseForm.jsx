@@ -25,7 +25,6 @@ export default function ExpenseForm() {
   const { addExpense } = useData();
   const router = useRouter();
 
-  const presets = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 500];
   const handlePreset = (p) => setAmount(String(p));
 
   const handleSubmit = async () => {
@@ -47,15 +46,15 @@ export default function ExpenseForm() {
   const icons = [
     {
       label: 'বাজার',
-      icon: <FontAwesome name='money' size={28} color='red' />,
+      icon: <FontAwesome name='money' size={28} color='#ef4444' />,
     },
     {
       label: 'বিল',
-      icon: <FontAwesome name='credit-card' size={28} color='red' />,
+      icon: <FontAwesome name='credit-card' size={28} color='#ef4444' />,
     },
     {
       label: 'ঔষধ',
-      icon: <FontAwesome name='plus' size={28} color='red' />,
+      icon: <FontAwesome name='plus' size={28} color='#ef4444' />,
     },
   ];
 
@@ -68,7 +67,7 @@ export default function ExpenseForm() {
         keyboardShouldPersistTaps='handled'
         contentContainerStyle={styles.container}
       >
-        <Text style={styles.header}>নতুন ব্যয় যোগ করুন</Text>
+        <Text style={styles.header}>ব্যয় যোগ করুন</Text>
 
         {/* Reason */}
         <TextInput
@@ -90,13 +89,12 @@ export default function ExpenseForm() {
               onPress={() => setReason(item.label)}
             >
               {item.icon}
-              <Text>{item.label}</Text>
+              <Text style={{ color: '#5f5f5f' }}>{item.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Amount */}
-        <Text style={styles.label}>কত টাকা ?</Text>
         <TextInput
           style={styles.input}
           keyboardType='numeric'
@@ -105,26 +103,13 @@ export default function ExpenseForm() {
           placeholder='৳ কত টাকা ?'
         />
 
-        {/* Preset Buttons */}
-        <View style={styles.presets}>
-          {presets.map((p) => (
-            <TouchableOpacity
-              key={p}
-              style={styles.presetButton}
-              onPress={() => handlePreset(p)}
-            >
-              <Text>{p}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* Date Picker */}
-        <Text style={styles.label}>তারিখ ও সময়</Text>
+
         <TouchableOpacity
           style={styles.input}
           onPress={() => setShowPicker(true)}
         >
-          <Text>{BDDateTime(selectedDate)}</Text>
+          <Text style={{ color: '#5f5f5f' }}>{BDDateTime(selectedDate)}</Text>
         </TouchableOpacity>
 
         {showPicker && (
@@ -161,7 +146,7 @@ export default function ExpenseForm() {
         style={styles.calcFloatBtn}
         onPress={() => setShowCalc(true)}
       >
-        <FontAwesome name='calculator' size={24} color='white' />
+        <FontAwesome name='calculator' size={35} color='#ff8000' />
       </TouchableOpacity>
 
       {/* Calculator Modal */}
@@ -175,17 +160,21 @@ export default function ExpenseForm() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
+  container: {
+    paddingHorizontal: 16,
+    backgroundColor: '#ffffff',
+    height: '100%',
+  },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 16,
-    color: 'red',
+    color: '#ef4444',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+    backgroundColor: '#ffffff',
+    boxShadow: '0 6px 30px #00000022',
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
@@ -195,23 +184,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
+    gap: 8,
   },
   iconButton: {
-    width: '30%',
+    flex: 1,
     alignItems: 'center',
     padding: 12,
-    borderWidth: 1,
-    borderColor: '#ccc',
+    boxShadow: '0 6px 30px #00000022',
     borderRadius: 12,
   },
-  selectedIconButton: { borderColor: 'red', backgroundColor: '#fee2e2' },
-  presets: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  presetButton: {
-    padding: 8,
-    backgroundColor: '#fee2e2',
-    borderRadius: 8,
-    margin: 4,
-  },
+  selectedIconButton: { backgroundColor: '#fd2c2c19' },
+
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -225,17 +208,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   backButton: { backgroundColor: '#374151' },
-  submitButton: { backgroundColor: 'red' },
+  submitButton: { backgroundColor: '#ef4444' },
   buttonText: { color: 'white', fontWeight: 'bold' },
   calcFloatBtn: {
     position: 'absolute',
     bottom: 100,
     right: 20,
-    backgroundColor: '#ff8000',
+    backgroundColor: '#ffffff',
     padding: 16,
     borderRadius: 50,
-    elevation: 5,
     justifyContent: 'center',
     alignItems: 'center',
+    boxShadow: '0 2px 20px #00000022',
   },
 });

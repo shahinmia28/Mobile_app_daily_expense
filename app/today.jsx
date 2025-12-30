@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import EditDeleteModal from '../components/EditDeleteModal';
 import EditForm from '../components/EditForm';
+import SummaryList from '../components/SummaryList';
 import { useData } from '../context/DataContext';
 import formatBDDate from '../utils/BDDateTime';
 import { safeISODate } from '../utils/safeDate';
@@ -39,7 +40,6 @@ export default function Today() {
   const totalExpense = filteredData
     .filter((i) => i.type === 'expense')
     .reduce((sum, i) => sum + Number(i.amount), 0);
-  const balance = totalIncome - totalExpense;
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
@@ -74,7 +74,7 @@ export default function Today() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ backgroundColor: '#ffffff', height: '100%' }}>
       <FlatList
         data={filteredData}
         keyExtractor={(item, index) => index.toString()}
@@ -82,26 +82,14 @@ export default function Today() {
         ListHeaderComponent={
           <>
             <View style={styles.summaryContainer}>
-              <Text style={styles.summaryTitle}>আজকের হিসাব</Text>
-              <View style={styles.summaryRow}>
-                <View
-                  style={[styles.summaryCard, { backgroundColor: '#22c55e' }]}
-                >
-                  <Text style={styles.summaryLabel}>আয়</Text>
-                  <Text style={styles.summaryValue}>{totalIncome}৳</Text>
-                </View>
-                <View
-                  style={[styles.summaryCard, { backgroundColor: '#ef4444' }]}
-                >
-                  <Text style={styles.summaryLabel}>ব্যয়</Text>
-                  <Text style={styles.summaryValue}>{totalExpense}৳</Text>
-                </View>
-                <View
-                  style={[styles.summaryCard, { backgroundColor: '#14b8a6' }]}
-                >
-                  <Text style={styles.summaryLabel}>ব্যালেন্স</Text>
-                  <Text style={styles.summaryValue}>{balance}৳</Text>
-                </View>
+              <View style={styles.titleBox}>
+                <Text style={styles.summaryTitle}>আজকের হিসাব</Text>
+              </View>
+              <View style={styles.summaryBoxes}>
+                <SummaryList
+                  totalExpense={totalExpense}
+                  totalIncome={totalIncome}
+                />
               </View>
             </View>
           </>
@@ -135,32 +123,27 @@ export default function Today() {
 }
 
 const styles = StyleSheet.create({
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#374151',
-    padding: 10,
-    borderRadius: 30,
-    marginBottom: 16,
-  },
-  backText: { color: 'white', marginLeft: 8 },
-  summaryContainer: { marginBottom: 16 },
-  summaryTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  summaryCard: {
+  summaryContainer: { flexDirection: 'row', gap: 12, marginVertical: 12 },
+  titleBox: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
-    marginHorizontal: 4,
+    justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 18,
+    boxShadow: '0 6px 30px #00000022',
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
   },
-  summaryLabel: { color: 'white', fontWeight: 'bold' },
-  summaryValue: { color: 'white', fontWeight: 'bold', fontSize: 16 },
+  summaryTitle: {
+    fontSize: 23,
+    fontWeight: 600,
+    padding: 10,
+    textAlign: 'center',
+    color: '#109b8b',
+  },
+  summaryBoxes: {
+    flex: 2,
+  },
+
   itemCard: {
     flexDirection: 'row',
     justifyContent: 'space-between',

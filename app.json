@@ -2,28 +2,33 @@
   "expo": {
     "name": "DailyWallet",
     "slug": "DailyWallet",
-    "version": "1.0.1",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon-3.png",
     "scheme": "dailywallet",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon-3.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.shahin.dailywallet",
-      "versionCode": 1,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#ffffff00",
-        "foregroundImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/images/icon-3.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/icon.png"
+      "favicon": "./assets/images/icon-3.png"
     },
     "plugins": [
       "expo-router",

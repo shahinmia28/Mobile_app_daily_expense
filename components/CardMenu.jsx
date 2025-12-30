@@ -9,29 +9,26 @@ export default function CardMenu() {
     <View style={styles.container}>
       {/* Today */}
       <TouchableOpacity
-        style={[styles.card, { borderColor: '#14b8a6' }]}
+        style={styles.card}
         onPress={() => router.push('/today')}
       >
         <Ionicons name='calendar' size={30} color='#14b8a6' />
-        <Text style={[styles.label, { color: '#065f46' }]}>আজ</Text>
+        <Text style={[styles.label, { color: '#14b8a6' }]}>আজ</Text>
       </TouchableOpacity>
 
       {/* All */}
-      <TouchableOpacity
-        style={[styles.card, { borderColor: '#9333ea' }]}
-        onPress={() => router.push('/all')}
-      >
+      <TouchableOpacity style={styles.card} onPress={() => router.push('/all')}>
         <Feather name='list' size={30} color='#9333ea' />
-        <Text style={[styles.label, { color: '#5b21b6' }]}>সমস্ত হিসাব</Text>
+        <Text style={[styles.label, { color: '#9333ea' }]}>সমস্ত হিসাব</Text>
       </TouchableOpacity>
 
       {/* Notes */}
       <TouchableOpacity
-        style={[styles.card, { borderColor: '#3b82f6' }]}
+        style={styles.card}
         onPress={() => router.push('/notes')}
       >
         <MaterialCommunityIcons name='note-text' size={30} color='#3b82f6' />
-        <Text style={[styles.label, { color: '#1e3a8a' }]}>নোট</Text>
+        <Text style={[styles.label, { color: '#3b82f6' }]}>নোট</Text>
       </TouchableOpacity>
     </View>
   );
@@ -42,19 +39,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
+    paddingVertical: 10,
   },
   card: {
+    boxShadow: '0 6px 30px #00000022',
     flex: 1,
     padding: 16,
-    borderWidth: 2,
     borderRadius: 20,
     backgroundColor: 'white',
     alignItems: 'center',
     marginHorizontal: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
   },
   label: {
     fontWeight: 'bold',

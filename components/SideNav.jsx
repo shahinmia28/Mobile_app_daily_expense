@@ -72,7 +72,7 @@ export default function SideNav({ visible, onClose }) {
           <View style={styles.logo}>
             <Text style={{ fontSize: 24 }}>💰</Text>
           </View>
-          <Text style={styles.headerText}>Daily Income & Expense</Text>
+          <Text style={styles.headerText}>Daily Wallet</Text>
         </View>
 
         {/* Menu */}
@@ -108,21 +108,21 @@ export default function SideNav({ visible, onClose }) {
         />
         <MenuItem
           icon='information'
-          label='About Us'
-          onPress={() => go('/about', 'About Us')}
-          selected={selected === 'About Us'}
+          label='About Me'
+          onPress={() => go('/about', 'About Me')}
+          selected={selected === 'About Me'}
+        />
+        <MenuItem
+          icon='phone'
+          label='Contact Me'
+          onPress={() => go('/contact', 'Contact Me')}
+          selected={selected === 'Contact Me'}
         />
         <MenuItem
           icon='shield-lock'
           label='Privacy Policy'
           onPress={() => go('/privacy', 'Privacy Policy')}
           selected={selected === 'Privacy Policy'}
-        />
-        <MenuItem
-          icon='phone'
-          label='Contact Us'
-          onPress={() => go('/contact', 'Contact Us')}
-          selected={selected === 'Contact Us'}
         />
       </Animated.View>
     </View>

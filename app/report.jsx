@@ -1,26 +1,18 @@
 import { Feather } from '@expo/vector-icons';
-import * as d3 from 'd3-shape';
 import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
-  Animated,
-  Dimensions,
-  PanResponder,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import Svg, { G, Path, Text as SvgText } from 'react-native-svg';
 import { useData } from '../context/DataContext';
 
-const screenWidth = Dimensions.get('window').width;
-const CHART_SIZE = screenWidth - 100;
-
 export default function Report() {
-  const { expenses, incomes } = useData();
+  const { incomes, expenses } = useData();
   const router = useRouter();
   const [selectedMonth, setSelectedMonth] = useState(dayjs());
 
@@ -28,60 +20,40 @@ export default function Report() {
   const endOfMonth = selectedMonth.endOf('month').toDate();
 
   const filterByMonth = (data) =>
-    data.filter((item) => {
-      const date = new Date(item.date);
-      return date >= startOfMonth && date <= endOfMonth;
+    data.filter((i) => {
+      const d = new Date(i.date);
+      return d >= startOfMonth && d <= endOfMonth;
     });
 
-  const generateChartData = (data, type) => {
-    const map = {};
-    data.forEach((item) => {
-      if (map[item.reason]) map[item.reason] += Number(item.amount);
-      else map[item.reason] = Number(item.amount);
-    });
-
-    const colors =
-      type === 'income'
-        ? [
-            '#bd43ff',
-            '#008c4b',
-            '#00ff5e',
-            '#8baaff',
-            '#001f76',
-            '#0044ff',
-            '#9000ff',
-            '#4b0085',
-          ]
-        : [
-            '#facc15',
-            '#00ff5e',
-            '#ef4444',
-            '#a855f7',
-            '#152cfa',
-            '#ff00e1',
-            '#9fdd00',
-            '#00ffff',
-          ];
-
-    return Object.keys(map).map((key, idx) => ({
-      name: key,
-      amount: map[key],
-      color: colors[idx % colors.length],
-    }));
-  };
-
-  const incomeChartData = generateChartData(filterByMonth(incomes), 'income');
-  const expenseChartData = generateChartData(
-    filterByMonth(expenses),
-    'expense'
+  const incomeData = useMemo(
+    () => summarize(filterByMonth(incomes)),
+    [incomes, selectedMonth]
   );
 
+  const expenseData = useMemo(
+    () => summarize(filterByMonth(expenses)),
+    [expenses, selectedMonth]
+  );
+
+  const totalIncome = incomeData.total;
+  const totalExpense = expenseData.total;
+
+  const total = totalIncome;
+
+  const expensePercent =
+    total === 0 ? 0 : Math.round((totalExpense / total) * 100);
+
+  const balanceAmount = totalIncome - totalExpense;
+
+  const balancePercent =
+    total === 0 ? 0 : Math.round((balanceAmount / total) * 100);
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Top Bar */}
+    <ScrollView style={styles.container}>
+      {/* ===== TOP BAR ===== */}
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => router.push('/')}>
-          <Feather name='arrow-left-circle' size={24} />
+          <Feather name='arrow-left' size={22} />
         </TouchableOpacity>
 
         <View style={styles.monthSelector}>
@@ -90,9 +62,11 @@ export default function Report() {
           >
             <Feather name='chevron-left' size={18} />
           </TouchableOpacity>
+
           <Text style={styles.monthText}>
             {selectedMonth.format('MMMM YYYY')}
           </Text>
+
           <TouchableOpacity
             onPress={() => setSelectedMonth(selectedMonth.add(1, 'month'))}
           >
@@ -100,213 +74,219 @@ export default function Report() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ width: 24 }} />
+        <View style={{ width: 22 }} />
       </View>
 
       <View style={styles.card}>
-        <DonutChart data={expenseChartData} title='ব্যয়' />
+        <Text style={styles.sectionTitle}>
+          আয় অনুযায়ী ব্যয় ও ব্যালেন্স
+          <Text style={{ color: '#16a34a' }}> ({total})</Text>
+        </Text>
+        {/* ===== BALANCE ===== */}
+        <Text style={[styles.expensePercentText, { color: '#16a34a' }]}>
+          ব্যালেন্স: {balanceAmount}৳ · {balancePercent}%
+        </Text>
+
+        <View style={styles.progressBg}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${balancePercent}%`,
+                backgroundColor: '#16a34a',
+              },
+            ]}
+          />
+        </View>
+
+        {/* ===== EXPENSE ===== */}
+        <Text
+          style={[
+            styles.expensePercentText,
+            { color: '#dc2626', marginTop: 10 },
+          ]}
+        >
+          ব্যয়: {totalExpense}৳ · {expensePercent}%
+        </Text>
+
+        <View style={styles.progressBg}>
+          <View
+            style={[
+              styles.progressFill,
+              {
+                width: `${expensePercent}%`,
+                backgroundColor: '#dc2626',
+              },
+            ]}
+          />
+        </View>
       </View>
 
+      {/* ===== INCOME DETAILS ===== */}
       <View style={styles.card}>
-        <DonutChart data={incomeChartData} title='আয়' />
+        <Text style={styles.sectionTitle}>আয়ের বিস্তারিত</Text>
+
+        {incomeData.items.map((i, idx) => (
+          <HorizontalBar
+            key={idx}
+            name={i.reason}
+            amount={i.amount}
+            percent={i.percent}
+            color={INCOME_COLORS[idx % INCOME_COLORS.length]}
+          />
+        ))}
+      </View>
+
+      {/* ===== EXPENSE DETAILS ===== */}
+      <View style={[styles.card, { marginBottom: 100 }]}>
+        <Text style={styles.sectionTitle}>ব্যয়ের বিস্তারিত</Text>
+
+        {expenseData.items.map((i, idx) => (
+          <HorizontalBar
+            key={idx}
+            name={i.reason}
+            amount={i.amount}
+            percent={i.percent}
+            color={EXPENSE_COLORS[idx % EXPENSE_COLORS.length]}
+          />
+        ))}
       </View>
     </ScrollView>
   );
 }
 
-/* ================= DONUT ================= */
+/* ================= HELPERS ================= */
 
-function DonutChart({ data, title }) {
-  const size = CHART_SIZE + 40; // chart-er মোট সাইজ
-  const radius = CHART_SIZE / 2; // outer radius
-  const innerRadius = radius - 110; // donut hole
-
-  const [activeIndex, setActiveIndex] = useState(null);
-
-  const rotateValue = useRef(new Animated.Value(0)).current;
-
-  // ================= PAN RESPONDER =================
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (_, g) => rotateValue.setValue(g.dx),
-      onPanResponderRelease: (_, g) => {
-        Animated.decay(rotateValue, {
-          velocity: g.vx,
-          deceleration: 0.995,
-          useNativeDriver: true,
-        }).start();
-      },
-    })
-  ).current;
-
-  const rotate = rotateValue.interpolate({
-    inputRange: [-300, 300],
-    outputRange: ['-180deg', '180deg'],
+function summarize(data) {
+  const map = {};
+  data.forEach((i) => {
+    map[i.reason] = (map[i.reason] || 0) + Number(i.amount);
   });
 
-  // ================= PIE DATA =================
-  const pieData = d3.pie().value((d) => d.amount)(data);
+  const total = Object.values(map).reduce((s, v) => s + v, 0);
 
-  const arc = d3.arc().innerRadius(innerRadius).outerRadius(radius);
-  const arcActive = d3
-    .arc()
-    .innerRadius(innerRadius)
-    .outerRadius(radius + 16); // tap করলে slice একটু বড় হয়
+  const items = Object.keys(map)
+    .map((key) => ({
+      reason: key,
+      amount: map[key],
+      percent: total === 0 ? 0 : Math.round((map[key] / total) * 100),
+    }))
+    // 🔥 SORT BY HIGHEST %
+    .sort((a, b) => b.percent - a.percent);
 
-  const total = data.reduce((s, i) => s + i.amount, 0);
+  return { total, items };
+}
 
+/* ================= COMPONENT ================= */
+
+function HorizontalBar({ name, amount, percent, color }) {
   return (
-    <View style={{ flexDirection: 'column', alignItems: 'center' }}>
-      {/* ================= CHART ================= */}
-      <View>
-        <Animated.View
-          {...panResponder.panHandlers}
-          style={{ transform: [{ rotate }] }}
-        >
-          <Svg width={size} height={size}>
-            <G x={size / 2} y={size / 2}>
-              {pieData.map((slice, i) => {
-                const path = activeIndex === i ? arcActive(slice) : arc(slice);
-
-                const [x, y] = arc.centroid(slice);
-
-                // ================= TEXT ALIGN =================
-                // Slice-er dike always text thakbe
-                const offset = 5; // slice theke distance
-                const textX = x >= 0 ? x + offset : x - offset;
-                const textAnchor = x >= 0 ? 'start' : 'end';
-
-                return (
-                  <G key={i}>
-                    <Path
-                      d={path}
-                      fill={slice.data.color}
-                      stroke='#fff'
-                      strokeWidth={0.5} // border
-                      onPress={() => setActiveIndex(i)}
-                    />
-                    <SvgText
-                      x={textX}
-                      y={y}
-                      fill='#fff'
-                      fontSize={11}
-                      fontWeight='400'
-                      textAnchor={textAnchor}
-                    >
-                      {slice.data.amount}
-                    </SvgText>
-                  </G>
-                );
-              })}
-            </G>
-          </Svg>
-        </Animated.View>
-
-        {/* ================= CENTER HOLE ================= */}
-        <View style={[styles.centerHole, { top: size / 2 - 35 }]}>
-          <Text style={styles.centerText}>{title}</Text>
-        </View>
+    <View style={styles.rowItem}>
+      <View style={styles.rowHeader}>
+        <Text style={styles.reason}>{name}</Text>
+        <Text style={styles.value}>
+          {amount}৳ · {percent}%
+        </Text>
       </View>
 
-      {/* ================= LEGEND ================= */}
-      <View style={styles.legendRight}>
-        {data.map((item, i) => {
-          const percent = Math.round((item.amount / total) * 100);
-          return (
-            <View key={i} style={styles.legendRow}>
-              <View style={[styles.dot, { backgroundColor: item.color }]} />
-              <Text style={styles.legendText} selectable={true}>
-                {item.name} — {item.amount}{' '}
-                <Text style={{ color: item.color }}>({percent}%) </Text>
-              </Text>
-            </View>
-          );
-        })}
+      <View style={styles.progressBg}>
+        <View
+          style={[
+            styles.progressFill,
+            { width: `${percent}%`, backgroundColor: color },
+          ]}
+        />
       </View>
     </View>
   );
 }
 
+/* ================= COLORS ================= */
+
+const INCOME_COLORS = ['#16a34a', '#22c55e', '#4ade80', '#86efac', '#a9fec8'];
+const EXPENSE_COLORS = ['#dc2626', '#ef4444', '#f87171', '#fecaca', '#ffd9d9'];
+
 /* ================= STYLES ================= */
 
 const styles = StyleSheet.create({
-  container: { padding: 16, backgroundColor: '#ffffff' },
+  container: {
+    backgroundColor: '#fff',
+    padding: 16,
+    height: '100%',
+    paddingBottom: 50,
+  },
 
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
 
   monthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#e5e7eb',
-    borderRadius: 20,
-    paddingHorizontal: 10,
+    paddingHorizontal: 12,
     paddingVertical: 6,
+    borderRadius: 20,
   },
 
   monthText: {
     marginHorizontal: 8,
-    fontWeight: 'bold',
-  },
-
-  title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginVertical: 8,
+    fontWeight: '700',
   },
 
   card: {
     backgroundColor: '#ffffff',
-    borderRadius: 16,
+    borderRadius: 18,
     padding: 16,
     marginBottom: 16,
     elevation: 4,
   },
 
-  centerHole: {
-    position: 'absolute',
-    alignSelf: 'center',
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#f4f4f4',
-    justifyContent: 'center',
-    alignItems: 'center',
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 12,
   },
 
-  centerText: {
-    fontWeight: 'bold',
-    fontSize: 14,
+  expensePercentText: {
+    fontWeight: '700',
+    color: '#dc2626',
+    marginBottom: 6,
   },
 
-  legendRight: {
-    width: '100%',
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-    marginTop: 10,
+  rowItem: {
+    marginBottom: 14,
   },
 
-  legendRow: {
+  rowHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 6,
   },
 
-  dot: {
-    width: 20,
-    height: 20,
-    borderRadius: 100,
-    marginRight: 6,
+  reason: {
+    fontWeight: '600',
+    color: '#374151',
   },
 
-  legendText: {
+  value: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: '600',
+    color: '#374151',
+  },
+
+  progressBg: {
+    height: 10,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+
+  progressFill: {
+    height: '100%',
+    borderRadius: 10,
   },
 });

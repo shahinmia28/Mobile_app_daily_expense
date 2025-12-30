@@ -1,4 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
+import dayjs from 'dayjs';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -18,33 +19,35 @@ export default function NotesPage() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* ===== Header ===== */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>Notes</Text>
         <TouchableOpacity
           onPress={() => {
             setSelectedNote(null);
             setShowEditor(true);
           }}
         >
-          <FontAwesome name='plus' size={22} color='white' />
+          <FontAwesome name='plus' size={22} color='#333' />
         </TouchableOpacity>
       </View>
-      {/* Home Button */}
+
+      {/* ===== Home Button ===== */}
       <TouchableOpacity
         style={styles.homeButton}
         onPress={() => router.push('/')}
       >
-        <FontAwesome name='home' size={24} color='white' />
+        <FontAwesome name='home' size={22} color='white' />
       </TouchableOpacity>
 
-      {/* Notes List */}
+      {/* ===== Notes List ===== */}
       <FlatList
         data={notes}
         keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={{ paddingBottom: 120 }}
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.noteItem}
+            style={styles.noteCard}
+            activeOpacity={0.85}
             onPress={() => {
               setSelectedNote(item);
               setShowEditor(true);
@@ -54,24 +57,23 @@ export default function NotesPage() {
               {item.pinned ? '📌 ' : ''}
               {item.title || 'Untitled'}
             </Text>
+
             <Text style={styles.noteDate}>
-              {item.updatedAt || item.createdAt}
+              {dayjs(item.updatedAt || item.createdAt).format('DD MMM YYYY')}
             </Text>
           </TouchableOpacity>
         )}
       />
 
-      {/* Note Editor */}
+      {/* ===== Note Editor ===== */}
       <NoteEditor
         visible={showEditor}
         note={selectedNote}
         onClose={() => setShowEditor(false)}
         onSave={(data) => {
           if (data.id) {
-            // 🟡 Existing note → auto / manual save
             editNote(data);
           } else {
-            // 🟢 New note → insert + close
             addNote({
               ...data,
               pinned: 0,
@@ -88,36 +90,51 @@ export default function NotesPage() {
   );
 }
 
-/* ❌ DESIGN NOT CHANGED */
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, marginTop: 10 },
+  container: {
+    flex: 1,
+    // padding: 16,
+    backgroundColor: '#ffffff',
+  },
+
   header: {
-    backgroundColor: '#374151',
-    padding: 14,
-    borderRadius: 12,
+    marginRight: 25,
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
-  headerText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-  noteItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderColor: '#eee',
+
+  noteCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    backgroundColor: '#ffffff',
+    padding: 16,
+    borderRadius: 18,
+    boxShadow: '0 6px 30px #00000022',
   },
-  noteTitle: { fontWeight: 'bold' },
-  noteDate: { fontSize: 12, color: '#6b7280' },
+
+  noteTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 6,
+  },
+
+  noteDate: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+
   homeButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
     zIndex: 100,
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
     backgroundColor: '#22c55e',
     padding: 16,
     borderRadius: 50,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
+    boxShadow: '0 6px 30px #00000022',
   },
 });

@@ -13,6 +13,7 @@ import {
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import EditDeleteModal from '../components/EditDeleteModal';
 import EditForm from '../components/EditForm';
+import SummaryList from '../components/SummaryList';
 import { useData } from '../context/DataContext';
 import formatBDDate from '../utils/BDDateTime';
 
@@ -88,6 +89,7 @@ export default function All() {
         style={[
           styles.itemCard,
           item.type === 'income' ? styles.incomeCard : styles.expenseCard,
+          ,
         ]}
         onPress={() => {
           setSelectedItem(item);
@@ -141,37 +143,42 @@ export default function All() {
           monthNames[selectedDate.getMonth()]
         } ${selectedDate.getFullYear()}`;
       else dateText = 'সব';
-      return `হিসাব সংক্ষেপ (${dateText})`;
+      return `${dateText}`;
     };
 
     return (
       <View style={styles.stickyHeader}>
+        {/* summary */}
         <View style={styles.summaryContainer}>
-          <Text style={styles.summaryTitle}>{getHeaderTitle()}</Text>
-          <View style={styles.summaryRow}>
-            <View style={[styles.summaryCard, { backgroundColor: '#22c55e' }]}>
-              <Text style={styles.summaryLabel}>আয়</Text>
-              <Text style={styles.summaryValue}>{totalIncome}৳</Text>
-            </View>
-            <View style={[styles.summaryCard, { backgroundColor: '#ef4444' }]}>
-              <Text style={styles.summaryLabel}>ব্যয়</Text>
-              <Text style={styles.summaryValue}>{totalExpense}৳</Text>
-            </View>
-            <View style={[styles.summaryCard, { backgroundColor: '#14b8a6' }]}>
-              <Text style={styles.summaryLabel}>ব্যালেন্স</Text>
-              <Text style={styles.summaryValue}>{balance}৳</Text>
-            </View>
+          <View style={styles.titleBox}>
+            <Text style={styles.summaryTitle}>{getHeaderTitle()}</Text>
+          </View>
+          <View style={styles.summaryBoxes}>
+            <SummaryList
+              totalExpense={totalExpense}
+              totalIncome={totalIncome}
+            />
           </View>
         </View>
-
-        <TouchableOpacity
-          style={styles.dateBtn}
-          onPress={() => setShowPicker(true)}
-        >
-          <FontAwesome name='calendar' size={18} />
-          <Text style={{ marginLeft: 8 }}>{formatBDDate(selectedDate)}</Text>
-        </TouchableOpacity>
-
+        {/* date picker and delete */}
+        <View style={styles.dateAndDeleteBox}>
+          <TouchableOpacity
+            style={styles.dateBtn}
+            onPress={() => setShowPicker(true)}
+          >
+            <FontAwesome name='calendar' size={18} />
+            <Text style={{ marginLeft: 8 }}>{formatBDDate(selectedDate)}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowConfirmDelete(true)}
+            style={styles.deleteAllBtn}
+          >
+            <Text style={{ color: '#dc2626', fontWeight: 'bold' }}>
+              Delete All
+            </Text>
+          </TouchableOpacity>
+        </View>
+        {/* mode change */}
         <View style={styles.modeRow}>
           {['today', 'month', 'all'].map((m) => (
             <TouchableOpacity
@@ -185,17 +192,6 @@ export default function All() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <View style={styles.deleteAllBtnContainer}>
-          <TouchableOpacity
-            onPress={() => setShowConfirmDelete(true)}
-            style={styles.deleteAllBtn}
-          >
-            <Text style={{ color: 'white', fontWeight: 'bold' }}>
-              Delete All
-            </Text>
-          </TouchableOpacity>
-        </View>
       </View>
     );
   };
@@ -208,9 +204,10 @@ export default function All() {
           item.id ? `${item.type}-${item.id}` : `${item.type}-${index}`
         }
         renderItem={renderItem}
-        contentContainerStyle={{}}
+        contentContainerStyle={{ paddingBottom: 100 }}
         ListHeaderComponent={<StickyHeader />}
         stickyHeaderIndices={[0]}
+        style={{ backgroundColor: '#ffffff' }}
       />
 
       {/* Floating Home Button */}
@@ -259,34 +256,54 @@ export default function All() {
 }
 
 const styles = StyleSheet.create({
-  stickyHeader: { backgroundColor: '#f3f3f3', marginHorizontal: 20 },
-  summaryContainer: {},
-  summaryTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 8,
+  stickyHeader: {
+    backgroundColor: '#ffffff',
+    marginHorizontal: 20,
+    paddingVertical: 5,
   },
-  summaryRow: {
-    flexDirection: 'row',
-    marginBottom: 15,
-  },
-  summaryCard: {
+  summaryContainer: { flexDirection: 'row', gap: 12, paddingVertical: 12 },
+  titleBox: {
     flex: 1,
-    marginHorizontal: 4,
-    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 18,
+    boxShadow: '0 6px 30px #00000022',
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
+  },
+  summaryTitle: {
+    fontSize: 15,
+    fontWeight: 600,
+    padding: 10,
+    textAlign: 'center',
+    color: '#109b8b',
+  },
+  summaryBoxes: {
+    flex: 2,
+  },
+  dateAndDeleteBox: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 15,
+    gap: 8,
+  },
+
+  dateBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    boxShadow: '0 6px 30px #00000022',
+    backgroundColor: '#ffffff',
+    padding: 10,
+    borderRadius: 12,
+  },
+  deleteAllBtn: {
+    flex: 1,
+    boxShadow: '0 6px 30px #dc26261b',
+    padding: 10,
     borderRadius: 12,
     alignItems: 'center',
-  },
-  summaryLabel: { color: 'white', fontWeight: 'bold' },
-  summaryValue: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  dateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e5e7eb',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 15,
   },
   modeRow: { flexDirection: 'row', marginBottom: 15 },
   modeBtn: {
@@ -294,23 +311,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
     padding: 10,
     borderRadius: 20,
-    backgroundColor: '#e5e7eb',
     alignItems: 'center',
+    boxShadow: '0 6px 30px #00000022',
   },
   modeActive: { backgroundColor: '#22c55e' },
-  modeText: { fontWeight: 'bold' },
+  modeText: { fontWeight: 'bold', color: '#464646' },
   deleteAllBtnContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
-  deleteAllBtn: {
-    width: '30%',
-    backgroundColor: '#dc2626',
-    padding: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 5,
-  },
+
   itemCard: {
     flexDirection: 'row',
     padding: 12,

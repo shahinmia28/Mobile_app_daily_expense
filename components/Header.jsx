@@ -14,7 +14,7 @@ export default function Header({ onMenu }) {
       <View style={styles.container}>
         {/* Hamburger */}
         <TouchableOpacity onPress={onMenu}>
-          <MaterialCommunityIcons name='menu' size={28} color='white' />
+          <MaterialCommunityIcons name='menu' size={28} color='#008080a4' />
         </TouchableOpacity>
 
         <View style={styles.balance}>
@@ -29,33 +29,30 @@ export default function Header({ onMenu }) {
 const styles = StyleSheet.create({
   wrapper: {
     marginTop: 50,
+    marginBottom: 20,
     alignItems: 'center',
   },
   container: {
     width: '90%',
-    backgroundColor: '#008080cc',
+    boxShadow: '0 2px 20px #00000022',
     padding: 16,
     borderRadius: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  title: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+
   balance: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#ffffff33',
+    backgroundColor: '#008080ac',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   balanceText: {
-    color: 'white',
+    color: '#fff',
     fontWeight: 'bold',
   },
 });

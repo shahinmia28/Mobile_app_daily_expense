@@ -2,9 +2,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  BackHandler,
   Modal,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
@@ -20,16 +20,25 @@ export default function NoteEditor({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [pinned, setPinned] = useState(0);
-  const [saving, setSaving] = useState(false);
+  const [listMode, setListMode] = useState(null);
+
+  /* ---------- UNDO / REDO ---------- */
+  const undoStack = useRef([]);
+  const redoStack = useRef([]);
+  const isUndoRedo = useRef(false);
 
   const saveTimer = useRef(null);
   const firstLoad = useRef(true);
 
-  /* ---------- sync note ---------- */
+  /* ---------- SYNC NOTE ---------- */
   useEffect(() => {
     setTitle(note?.title || '');
     setContent(note?.content || '');
     setPinned(note?.pinned || 0);
+    setListMode(null);
+
+    undoStack.current = [];
+    redoStack.current = [];
     firstLoad.current = true;
   }, [note, visible]);
 
@@ -41,38 +50,92 @@ export default function NoteEditor({
       return;
     }
 
-    setSaving(true);
-
     if (saveTimer.current) clearTimeout(saveTimer.current);
 
     saveTimer.current = setTimeout(() => {
-      onSave({
-        id: note.id,
-        title,
-        content,
-        pinned,
-      });
-      setSaving(false);
+      onSave({ id: note.id, title, content, pinned });
     }, 800);
 
     return () => clearTimeout(saveTimer.current);
   }, [title, content, pinned]);
 
-  /* ---------- SMART LIST ---------- */
+  /* ---------- ANDROID BACK FIX (🔥 MAIN FIX) ---------- */
+  useEffect(() => {
+    if (!visible) return;
+
+    const subscription = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        onClose();
+        return true; // ⛔ default back বন্ধ
+      }
+    );
+
+    return () => subscription.remove();
+  }, [visible, onClose]);
+
+  /* ---------- SMART INPUT ---------- */
   const handleContentChange = (text) => {
+    if (!isUndoRedo.current) {
+      undoStack.current.push(content);
+      redoStack.current = [];
+    }
+    isUndoRedo.current = false;
+
     const lines = text.split('\n');
     const prev = lines[lines.length - 2];
 
-    if (text.endsWith('\n') && prev?.match(/^(\d+)\.\s/)) {
+    if (
+      listMode === 'number' &&
+      text.endsWith('\n') &&
+      prev?.match(/^(\d+)\.\s/)
+    ) {
       const n = Number(prev.match(/^(\d+)/)[1]) + 1;
       lines[lines.length - 1] = `${n}. `;
       setContent(lines.join('\n'));
       return;
     }
+
+    if (
+      listMode === 'bullet' &&
+      text.endsWith('\n') &&
+      prev?.startsWith('• ')
+    ) {
+      lines[lines.length - 1] = '• ';
+      setContent(lines.join('\n'));
+      return;
+    }
+
     setContent(text);
   };
 
-  /* ---------- DELETE CONFIRM ---------- */
+  /* ---------- LIST INSERT ---------- */
+  const insertList = (type) => {
+    setListMode(type);
+    const prefix = type === 'number' ? '1. ' : '• ';
+    setContent((p) =>
+      p === '' || p.endsWith('\n') ? p + prefix : p + '\n' + prefix
+    );
+  };
+
+  /* ---------- UNDO / REDO ---------- */
+  const undo = () => {
+    if (!undoStack.current.length) return;
+    isUndoRedo.current = true;
+    const prev = undoStack.current.pop();
+    redoStack.current.push(content);
+    setContent(prev);
+  };
+
+  const redo = () => {
+    if (!redoStack.current.length) return;
+    isUndoRedo.current = true;
+    const next = redoStack.current.pop();
+    undoStack.current.push(content);
+    setContent(next);
+  };
+
+  /* ---------- DELETE ---------- */
   const confirmDelete = () => {
     Alert.alert('Delete Note?', 'এই নোটটি মুছে ফেলতে চান?', [
       { text: 'Cancel', style: 'cancel' },
@@ -84,59 +147,89 @@ export default function NoteEditor({
     ]);
   };
 
-  /* ---------- MANUAL SAVE ---------- */
-  const handleSave = () => {
-    setSaving(true);
-    onSave({
-      id: note?.id,
-      title,
-      content,
-      pinned,
-    });
-
-    setTimeout(() => setSaving(false), 500);
-  };
-
   return (
     <Modal
       visible={visible}
       animationType='slide'
       transparent={false}
-      onRequestClose={onClose}
+      onRequestClose={onClose} // ✅ MUST for Android
     >
       <View style={styles.container}>
-        {/* Header */}
+        {/* ===== HEADER ===== */}
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose}>
-            <FontAwesome name='arrow-left' size={22} color='white' />
+            <FontAwesome name='arrow-left' size={22} />
           </TouchableOpacity>
 
           <View style={styles.headerActions}>
-            {/* PIN (UNCHANGED COLOR) */}
-            <TouchableOpacity onPress={() => setPinned((p) => (p ? 0 : 1))}>
+            {/* ↩️ UNDO */}
+            <TouchableOpacity
+              onPress={undo}
+              disabled={!undoStack.current.length}
+            >
               <FontAwesome
-                name='thumb-tack'
-                size={20}
-                color={pinned ? '#f59e0b' : 'white'}
+                name='undo'
+                size={18}
+                color={undoStack.current.length ? '#2563eb' : '#9ca3af'}
               />
             </TouchableOpacity>
 
-            {/* SAVE */}
-            <TouchableOpacity style={styles.iconBtn} onPress={handleSave}>
-              <FontAwesome name='save' size={18} color='white' />
+            {/* ↪️ REDO */}
+            <TouchableOpacity
+              onPress={redo}
+              disabled={!redoStack.current.length}
+            >
+              <FontAwesome
+                name='repeat'
+                size={18}
+                color={redoStack.current.length ? '#2563eb' : '#9ca3af'}
+              />
             </TouchableOpacity>
 
-            {/* DELETE */}
+            {/* Aa (Plain text) */}
+            <TouchableOpacity onPress={() => setListMode(null)}>
+              <FontAwesome
+                name='font'
+                size={18}
+                color={listMode === null ? '#2563eb' : '#374151'}
+              />
+            </TouchableOpacity>
+
+            {/* 1. Number list */}
+            <TouchableOpacity onPress={() => insertList('number')}>
+              <FontAwesome
+                name='list-ol'
+                size={18}
+                color={listMode === 'number' ? '#2563eb' : '#374151'}
+              />
+            </TouchableOpacity>
+
+            {/* • Bullet list */}
+            <TouchableOpacity onPress={() => insertList('bullet')}>
+              <FontAwesome
+                name='list-ul'
+                size={18}
+                color={listMode === 'bullet' ? '#2563eb' : '#374151'}
+              />
+            </TouchableOpacity>
+
+            {/* 📌 PIN */}
+            <TouchableOpacity onPress={() => setPinned((p) => (p ? 0 : 1))}>
+              <FontAwesome
+                name='thumb-tack'
+                size={18}
+                color={pinned ? '#f59e0b' : '#374151'}
+              />
+            </TouchableOpacity>
+
+            {/* 🗑 DELETE */}
             {note?.id && (
-              <TouchableOpacity style={styles.iconBtn} onPress={confirmDelete}>
-                <FontAwesome name='trash' size={18} color='white' />
+              <TouchableOpacity onPress={confirmDelete}>
+                <FontAwesome name='trash' size={18} color='#dc2626' />
               </TouchableOpacity>
             )}
           </View>
         </View>
-
-        {/* Saving Indicator */}
-        {saving && <Text style={styles.savingText}>Saving...</Text>}
 
         <TextInput
           style={styles.title}
@@ -157,41 +250,39 @@ export default function NoteEditor({
   );
 }
 
-/* 🎨 DESIGN SAME, ONLY COLOR FIX */
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16, marginTop: 20 },
 
   header: {
-    backgroundColor: '#9f9f9f',
+    backgroundColor: '#fff',
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 14,
-    borderRadius: 12,
+    borderRadius: 14,
+    elevation: 6,
     marginBottom: 6,
   },
 
   headerActions: {
     flexDirection: 'row',
-    gap: 18,
+    gap: 25,
     alignItems: 'center',
-  },
-
-  savingText: {
-    color: '#6b7280',
-    fontSize: 12,
-    marginBottom: 6,
-    textAlign: 'right',
+    paddingEnd: 10,
   },
 
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    borderBottomWidth: 1,
+    fontWeight: '700',
+    borderBottomWidth: 0.5,
+    borderColor: '#ccc',
     marginBottom: 12,
   },
 
   content: {
     flex: 1,
+    fontSize: 15,
     textAlignVertical: 'top',
   },
 });

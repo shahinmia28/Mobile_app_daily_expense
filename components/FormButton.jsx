@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function FormButton() {
   const router = useRouter();
@@ -9,20 +9,20 @@ export default function FormButton() {
     <View style={styles.container}>
       {/* Income */}
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#14b8a6' }]}
+        style={styles.button}
         onPress={() => router.push('/incomeForm')}
       >
-        <Ionicons name='trending-up' size={28} color='white' />
-        <Text style={styles.label}>আয়</Text>
+        <Ionicons name='trending-up' size={28} color='#14b8a6' />
+        <Text style={[styles.label, { color: '#14b8a6' }]}>আয়</Text>
       </TouchableOpacity>
 
       {/* Expense */}
       <TouchableOpacity
-        style={[styles.button, { backgroundColor: '#ef4444' }]}
+        style={styles.button}
         onPress={() => router.push('/expenseForm')}
       >
-        <Ionicons name='trending-down' size={28} color='white' />
-        <Text style={styles.label}>ব্যয়</Text>
+        <Ionicons name='trending-down' size={28} color='#ef4444' />
+        <Text style={[styles.label, { color: '#ef4444' }]}>ব্যয়</Text>
       </TouchableOpacity>
     </View>
   );
@@ -41,10 +41,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5,
+    backgroundColor: 'white',
+    boxShadow: '0 6px 30px #00000022',
+    backgroundColor: '#ffffff',
   },
   label: {
-    color: 'white',
     fontWeight: 'bold',
     fontSize: 18,
     marginTop: 4,

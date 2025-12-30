@@ -1,5 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  BackHandler,
   Modal,
   StyleSheet,
   Text,
@@ -21,141 +22,130 @@ export default function Calculator({
   });
   const inputRef = useRef();
 
-  // Live result calculate
+  /* ---------- ANDROID BACK ---------- */
+  useEffect(() => {
+    if (!visible) return;
+
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+
+    return () => sub.remove();
+  }, [visible]);
+
+  /* ---------- CALC ---------- */
   const calculateResult = (expr) => {
     if (!expr) return '0';
     try {
       const sanitized = expr.replace(/%/g, '/100');
-      const res = eval(sanitized);
-      return res;
+      return eval(sanitized).toString();
     } catch {
-      return 'Error';
+      return '';
     }
   };
 
-  // Handle button press
   const handlePress = (val) => {
-    const operators = ['+', '-', '*', '/'];
-    const start = selection.start;
-    const end = selection.end;
-    let newInput = input;
-
-    // Operator overwrite logic
-    if (operators.includes(val)) {
-      if (input && operators.includes(input[start - 1])) {
-        newInput = input.slice(0, start - 1) + val + input.slice(end);
-        setInput(newInput);
-        const cursorPos = start;
-        setSelection({ start: cursorPos, end: cursorPos });
-        return;
-      }
-    }
-
-    // Normal insert
-    newInput = input.slice(0, start) + val + input.slice(end);
+    const { start, end } = selection;
+    const newInput = input.slice(0, start) + val + input.slice(end);
     setInput(newInput);
-    const cursorPos = start + val.length;
-    setSelection({ start: cursorPos, end: cursorPos });
+    const cursor = start + val.length;
+    setSelection({ start: cursor, end: cursor });
   };
 
-  const handleAllClear = () => {
+  const handleAC = () => {
     setInput('');
     setSelection({ start: 0, end: 0 });
   };
 
-  const handleSingleClear = () => {
-    const start = selection.start;
-    const end = selection.end;
+  const handleBackspace = () => {
+    const { start, end } = selection;
     if (start === 0 && end === 0) return;
     const newInput = input.slice(0, start - 1) + input.slice(end);
     setInput(newInput);
-    const cursorPos = start - 1 < 0 ? 0 : start - 1;
-    setSelection({ start: cursorPos, end: cursorPos });
+    const cursor = Math.max(start - 1, 0);
+    setSelection({ start: cursor, end: cursor });
   };
 
   const handleEqual = () => {
     const res = calculateResult(input);
-    if (res !== 'Error') {
-      setInput(res.toString());
-      setSelection({
-        start: res.toString().length,
-        end: res.toString().length,
-      });
-      if (onResult) onResult(res);
-    }
+    if (!res) return;
+    setInput(res);
+    setSelection({ start: res.length, end: res.length });
+    onResult?.(res);
   };
 
   const buttons = [
-    ['7', '8', '9', '/'],
-    ['4', '5', '6', '*'],
-    ['1', '2', '3', '-'],
-    ['0', '.', '%', '+'],
+    ['AC', '⌫', '%', '/'],
+    ['7', '8', '9', '*'],
+    ['4', '5', '6', '-'],
+    ['1', '2', '3', '+'],
+    ['0', '.', '='],
   ];
 
   return (
-    <Modal visible={visible} animationType='slide' transparent={true}>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          {/* Input Field with cursor, keyboard-free */}
-          <TextInput
-            ref={inputRef}
-            style={styles.inputDisplay}
-            value={input}
-            onChangeText={setInput}
-            selection={selection}
-            onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
-            keyboardType='numeric'
-            showSoftInputOnFocus={false} // Mobile keyboard disable
-          />
+    <Modal
+      visible={visible}
+      animationType='slide'
+      transparent
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlay}>
+        <View style={styles.container}>
+          {/* DISPLAY */}
+          <View style={styles.display}>
+            <TextInput
+              ref={inputRef}
+              value={input}
+              style={styles.input}
+              selection={selection}
+              onChangeText={setInput}
+              onSelectionChange={(e) => setSelection(e.nativeEvent.selection)}
+              showSoftInputOnFocus={false}
+              keyboardType='numeric'
+              selectable
+            />
 
-          {/* Live Result Field */}
-          <View style={styles.resultDisplay}>
-            <Text style={styles.resultText} selectable={true}>
+            <Text style={styles.result} selectable={true}>
               {calculateResult(input)}
             </Text>
           </View>
-          {/* Bottom Row: AC | C | = | Cancel */}
-          <View style={styles.bottomRow}>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#343434' }]}
-              onPress={onClose}
-            >
-              <Text style={[styles.bottomBtnText, { color: 'white' }]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
-              onPress={handleAllClear}
-            >
-              <Text style={styles.bottomBtnText}>AC</Text>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#222' }]}
-              onPress={handleEqual}
-            >
-              <Text style={[styles.bottomBtnText, { color: 'white' }]}>=</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.bottomBtn, { backgroundColor: '#999' }]}
-              onPress={handleSingleClear}
-            >
-              <Text style={styles.bottomBtnText}>C</Text>
-            </TouchableOpacity>
-          </View>
-          {/* Calculator Buttons */}
-          {buttons.map((row, rIdx) => (
-            <View key={rIdx} style={styles.row}>
-              {row.map((btn) => (
-                <TouchableOpacity
-                  key={btn}
-                  style={styles.btn}
-                  onPress={() => handlePress(btn)}
-                >
-                  <Text style={styles.btnText}>{btn}</Text>
-                </TouchableOpacity>
-              ))}
+          {/* KEYPAD */}
+          {buttons.map((row, i) => (
+            <View key={i} style={styles.row}>
+              {row.map((btn) => {
+                const isOperator = ['+', '-', '*', '/', '%'].includes(btn);
+                const isEqual = btn === '=';
+
+                return (
+                  <TouchableOpacity
+                    key={btn}
+                    style={[
+                      styles.key,
+                      isOperator && styles.operatorKey,
+                      isEqual && styles.equalKey,
+                    ]}
+                    onPress={() => {
+                      if (btn === 'AC') handleAC();
+                      else if (btn === '⌫') handleBackspace();
+                      else if (btn === '=') handleEqual();
+                      else handlePress(btn);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text
+                      style={[
+                        styles.keyText,
+                        isOperator && styles.operatorText,
+                        isEqual && styles.equalText,
+                      ]}
+                    >
+                      {btn}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           ))}
         </View>
@@ -164,61 +154,90 @@ export default function Calculator({
   );
 }
 
+/* ================= STYLES ================= */
+
 const styles = StyleSheet.create({
-  modalContainer: {
+  overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  modalContent: {
-    width: '90%',
-    backgroundColor: 'white',
-    borderRadius: 15,
-    padding: 15,
+
+  container: {
+    backgroundColor: '#f9fafb',
+    padding: 16,
+    borderRadius: 26,
+    margin: 10,
+
+    /* PREMIUM OUTER SHADOW */
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+    elevation: 20,
   },
-  inputDisplay: {
-    height: 60,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 10,
-    marginBottom: 5,
-    fontSize: 28,
-    paddingHorizontal: 10,
+
+  display: {
+    marginBottom: 16,
+  },
+
+  input: {
+    fontSize: 36,
+    color: '#111827',
     textAlign: 'right',
+    paddingVertical: 8,
   },
-  resultDisplay: {
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    paddingHorizontal: 10,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 10,
+
+  result: {
+    fontSize: 20,
+    color: '#6b7280',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+
+  row: {
+    flexDirection: 'row',
     marginBottom: 10,
   },
-  resultText: { fontSize: 24, fontWeight: 'bold', color: '#606060' },
-  row: { flexDirection: 'row', marginBottom: 10 },
-  btn: {
+
+  key: {
     flex: 1,
-    margin: 5,
-    height: 60,
-    backgroundColor: '#e5e7eb',
+    height: 64,
+    marginHorizontal: 6,
+    backgroundColor: '#ffffff',
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
+
+    /* SOFT SHADOW */
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 14,
+    elevation: 6,
   },
-  btnText: { fontSize: 22, fontWeight: 'bold' },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 5,
+
+  keyText: {
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#111827',
   },
-  bottomBtn: {
-    flex: 1,
-    margin: 5,
-    height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
+
+  operatorKey: {
+    backgroundColor: '#eef2ff',
   },
-  bottomBtnText: { fontSize: 20, fontWeight: 'bold', color: '#505050' },
+
+  operatorText: {
+    color: '#4f46e5',
+  },
+
+  equalKey: {
+    backgroundColor: '#4f46e5',
+    flex: 2,
+  },
+
+  equalText: {
+    color: '#fff',
+    fontSize: 26,
+  },
 });
