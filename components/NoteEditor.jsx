@@ -30,7 +30,7 @@ export default function NoteEditor({
   const saveTimer = useRef(null);
   const firstLoad = useRef(true);
 
-  /* ---------- SYNC NOTE ---------- */
+  /* ---------- NOTE SYNC ---------- */
   useEffect(() => {
     setTitle(note?.title || '');
     setContent(note?.content || '');
@@ -42,11 +42,22 @@ export default function NoteEditor({
     firstLoad.current = true;
   }, [note, visible]);
 
-  /* ---------- AUTO SAVE ---------- */
+  /* ---------- NOTE HAS DATA? (🆕) ---------- */
+  const hasContent = () => title.trim().length > 0 || content.trim().length > 0;
+
+  /* ---------- AUTO SAVE + AUTO DELETE ---------- */
   useEffect(() => {
     if (!note?.id) return;
+
     if (firstLoad.current) {
       firstLoad.current = false;
+      return;
+    }
+
+    // 🗑 existing note থেকে সব data মুছে ফেললে auto delete
+    if (!hasContent()) {
+      onDelete(note.id);
+      onClose();
       return;
     }
 
@@ -59,20 +70,42 @@ export default function NoteEditor({
     return () => clearTimeout(saveTimer.current);
   }, [title, content, pinned]);
 
-  /* ---------- ANDROID BACK FIX (🔥 MAIN FIX) ---------- */
+  /* ---------- CLOSE HANDLER (🆕 SMART) ---------- */
+  const handleClose = () => {
+    // 🆕 নতুন note + কিছু লেখা আছে → auto create
+    if (!note?.id && hasContent()) {
+      onSave({ title, content, pinned });
+    }
+    onClose();
+  };
+
+  /* ---------- ANDROID BACK ---------- */
   useEffect(() => {
     if (!visible) return;
 
     const subscription = BackHandler.addEventListener(
       'hardwareBackPress',
       () => {
-        onClose();
-        return true; // ⛔ default back বন্ধ
+        handleClose(); // 🆕 smart close
+        return true;
       }
     );
 
     return () => subscription.remove();
-  }, [visible, onClose]);
+  }, [visible, title, content]);
+
+  /* ---------- MANUAL SAVE ---------- */
+  const handleSave = () => {
+    if (!hasContent()) return;
+
+    onSave({
+      id: note?.id,
+      title,
+      content,
+      pinned,
+    });
+    onClose();
+  };
 
   /* ---------- SMART INPUT ---------- */
   const handleContentChange = (text) => {
@@ -118,7 +151,7 @@ export default function NoteEditor({
     );
   };
 
-  /* ---------- UNDO / REDO ---------- */
+  /* ---------- UNDO ---------- */
   const undo = () => {
     if (!undoStack.current.length) return;
     isUndoRedo.current = true;
@@ -127,6 +160,7 @@ export default function NoteEditor({
     setContent(prev);
   };
 
+  /* ---------- REDO ---------- */
   const redo = () => {
     if (!redoStack.current.length) return;
     isUndoRedo.current = true;
@@ -142,7 +176,10 @@ export default function NoteEditor({
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: () => onDelete(note.id),
+        onPress: () => {
+          onDelete(note.id);
+          onClose();
+        },
       },
     ]);
   };
@@ -152,16 +189,21 @@ export default function NoteEditor({
       visible={visible}
       animationType='slide'
       transparent={false}
-      onRequestClose={onClose} // ✅ MUST for Android
+      onRequestClose={handleClose}
     >
       <View style={styles.container}>
         {/* ===== HEADER ===== */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity onPress={handleClose}>
             <FontAwesome name='arrow-left' size={22} />
           </TouchableOpacity>
 
           <View style={styles.headerActions}>
+            {/* 💾 SAVE */}
+            <TouchableOpacity onPress={handleSave}>
+              <FontAwesome name='save' size={18} color='#9ca3af' />
+            </TouchableOpacity>
+
             {/* ↩️ UNDO */}
             <TouchableOpacity
               onPress={undo}
@@ -186,7 +228,7 @@ export default function NoteEditor({
               />
             </TouchableOpacity>
 
-            {/* Aa (Plain text) */}
+            {/* Aa */}
             <TouchableOpacity onPress={() => setListMode(null)}>
               <FontAwesome
                 name='font'
@@ -195,7 +237,7 @@ export default function NoteEditor({
               />
             </TouchableOpacity>
 
-            {/* 1. Number list */}
+            {/* 1. */}
             <TouchableOpacity onPress={() => insertList('number')}>
               <FontAwesome
                 name='list-ol'
@@ -204,7 +246,7 @@ export default function NoteEditor({
               />
             </TouchableOpacity>
 
-            {/* • Bullet list */}
+            {/* • */}
             <TouchableOpacity onPress={() => insertList('bullet')}>
               <FontAwesome
                 name='list-ul'
@@ -213,7 +255,7 @@ export default function NoteEditor({
               />
             </TouchableOpacity>
 
-            {/* 📌 PIN */}
+            {/* 📌 */}
             <TouchableOpacity onPress={() => setPinned((p) => (p ? 0 : 1))}>
               <FontAwesome
                 name='thumb-tack'
@@ -222,7 +264,7 @@ export default function NoteEditor({
               />
             </TouchableOpacity>
 
-            {/* 🗑 DELETE */}
+            {/* 🗑 */}
             {note?.id && (
               <TouchableOpacity onPress={confirmDelete}>
                 <FontAwesome name='trash' size={18} color='#dc2626' />

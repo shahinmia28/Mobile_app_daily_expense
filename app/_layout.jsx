@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar'; // 🆕 ADD
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import Toast from 'react-native-toast-message';
@@ -22,6 +23,9 @@ export default function Layout() {
 
   return (
     <DataProvider>
+      {/* 🔥 STATUS BAR FIX */}
+      <StatusBar style='dark' backgroundColor='#ffffff' />
+
       {/* Header */}
       <Header onMenu={() => setMenuOpen(true)} />
 
